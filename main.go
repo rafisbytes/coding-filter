@@ -25,9 +25,30 @@ func main() {
 
 		// Allow only google.com and its subdomains
 		if !isAllowedDomain(hostname) {
-			// Return a blocked response
-			return r, goproxy.NewResponse(r, goproxy.ContentTypeText, http.StatusForbidden,
-				fmt.Sprintf("Access Denied: %s is blocked. Only google.com is allowed.", hostname))
+			// Return an HTML blocked response
+			htmlResponse := fmt.Sprintf(`
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Access Denied</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f0f0f0; }
+        .container { max-width: 600px; margin: 100px auto; padding: 20px; background-color: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #d32f2f; }
+        p { color: #666; }
+        .blocked-domain { font-weight: bold; color: #d32f2f; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚫 You were caught! 🚫</h1>
+        <p>You tried to be distracted... but the PROFESOR is watching you!</p>
+    </div>
+</body>
+</html>
+            `, hostname)
+
+			return r, goproxy.NewResponse(r, goproxy.ContentTypeHtml, http.StatusForbidden, htmlResponse)
 		}
 
 		return r, nil
@@ -47,20 +68,13 @@ func isAllowedDomain(hostname string) bool {
 	hostname = strings.ToLower(hostname)
 
 	// Allow google.com and all its subdomains
-	if hostname == "google.com" || strings.HasSuffix(hostname, ".google.com") {
+	if strings.HasSuffix(hostname, ".google.com") {
 		return true
 	}
 
 	// Also allow common google domains
 	allowedDomains := []string{
-		"google.com",
-		"www.google.com",
-		"accounts.google.com",
-		"mail.google.com",
-		"drive.google.com",
-		"maps.google.com",
-		"youtube.com",
-		"www.youtube.com",
+		"onlineide.pro",
 	}
 
 	for _, domain := range allowedDomains {
